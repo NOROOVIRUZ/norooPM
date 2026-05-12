@@ -1,0 +1,6 @@
+scrapling[fetchers]
+DrissionPage
+fastapi
+uvicorn
+python-dotenv
+httpx

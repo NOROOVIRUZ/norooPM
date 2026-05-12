@@ -1,0 +1,9 @@
+.env
+.env.local
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+web/dist/
+worker/dist/
+.wrangler/
