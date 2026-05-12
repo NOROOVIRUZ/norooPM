@@ -1,0 +1,56 @@
+name: Scrape Slow
+
+on:
+  schedule:
+    - cron: '30 */4 * * *'   # 4시간마다 (30분 오프셋으로 fast와 겹침 방지)
+  workflow_dispatch:
+    inputs:
+      categories:
+        description: '카테고리 (예: 전동칫솔 마사지기)'
+        required: false
+        default: 'all'
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          scrapling install
+
+      - name: Run scraper
+        run: |
+          CATS="${{ github.event.inputs.categories }}"
+          if [ "$CATS" = "all" ] || [ -z "$CATS" ]; then
+            python main.py --platforms aliexpress jd coupang shopee
+          else
+            python main.py --categories $CATS --platforms aliexpress jd coupang shopee
+          fi
+
+      - name: Commit data
+        run: |
+          git config user.name "norooPM-bot"
+          git config user.email "actions@github.com"
+          git add data/
+          git diff --cached --quiet || git commit -m "data(slow): $(date +'%Y-%m-%d %H:%M') 수집"
+          git push
+
+      - name: Telegram 알림
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          EMOJI="✅"; [ "$STATUS" != "success" ] && EMOJI="❌"
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+            -d "text=${EMOJI} [Slow] norooPM 수집 완료 👉 https://norooviruz.github.io/norooPM/"

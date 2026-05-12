@@ -1,0 +1,54 @@
+name: Scrape Fast
+
+on:
+  schedule:
+    - cron: '0 * * * *'   # 매 1시간
+  workflow_dispatch:
+    inputs:
+      categories:
+        description: '카테고리 (예: 전동칫솔 마사지기)'
+        required: false
+        default: 'all'
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run scraper
+        run: |
+          CATS="${{ github.event.inputs.categories }}"
+          if [ "$CATS" = "all" ] || [ -z "$CATS" ]; then
+            python main.py --platforms amazon amazon_jp rakuten flipkart
+          else
+            python main.py --categories $CATS --platforms amazon amazon_jp rakuten flipkart
+          fi
+
+      - name: Commit data
+        run: |
+          git config user.name "norooPM-bot"
+          git config user.email "actions@github.com"
+          git add data/
+          git diff --cached --quiet || git commit -m "data(fast): $(date +'%Y-%m-%d %H:%M') 수집"
+          git push
+
+      - name: Telegram 알림
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          EMOJI="✅"; [ "$STATUS" != "success" ] && EMOJI="❌"
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+            -d "text=${EMOJI} [Fast] norooPM 수집 완료 👉 https://norooviruz.github.io/norooPM/"
