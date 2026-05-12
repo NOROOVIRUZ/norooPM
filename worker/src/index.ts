@@ -5,8 +5,6 @@ const CACHE_TTL = 3600; // 1시간
 export interface Env {
   NOOROOPM_CACHE: KVNamespace;
   GITHUB_TOKEN: string;
-  TELEGRAM_BOT_TOKEN: string;
-  TELEGRAM_CHAT_ID: string;
 }
 
 export default {
@@ -93,17 +91,6 @@ async function triggerScrape(
   });
 
   if (res.status === 204) {
-    await fetch(
-      `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: env.TELEGRAM_CHAT_ID,
-          text: `🔍 norooPM 수집 시작됨\n카테고리: ${body.categories ?? "전체"}\n약 3~5분 후 완료 알림 드릴게요.`,
-        }),
-      }
-    );
     return new Response(JSON.stringify({ ok: true }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });

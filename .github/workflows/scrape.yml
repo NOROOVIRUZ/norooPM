@@ -56,14 +56,3 @@ jobs:
           git diff --cached --quiet || git commit -m "data: $(date +'%Y-%m-%d') 수집 완료"
           git push
 
-      - name: Telegram 완료 알림
-        if: always()
-        run: |
-          STATUS="${{ job.status }}"
-          EMOJI="✅"
-          [ "$STATUS" != "success" ] && EMOJI="❌"
-          MSG="${EMOJI} norooPM 수집 ${STATUS} — $(date +'%Y-%m-%d %H:%M') UTC"
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
-            -d text="$MSG" \
-            -d parse_mode="HTML"
