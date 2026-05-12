@@ -1,6 +1,6 @@
 import time
 import random
-from scrapling.fetchers import Fetcher
+from scrapling.fetchers import StealthyFetcher
 from core.models import Product
 
 # 카테고리 → 영어 검색어
@@ -25,10 +25,11 @@ HEADERS = {
 def scrape(category: str, max_items: int = 20) -> list[Product]:
     keyword = CATEGORY_EN.get(category, category)
     url = f"https://www.amazon.com/s?k={keyword.replace(' ', '+')}&s=exact-aware-popularity-rank"
-    fetcher = Fetcher(auto_match=False)
+    fetcher = StealthyFetcher(auto_match=False)
 
     try:
-        page = fetcher.get(url, headers=HEADERS, stealthy_headers=True)
+        page = fetcher.get(url, headless=True, network_idle=True, disable_resources=True)
+        print(f"[Amazon] 페이지 길이: {len(page.html_content)}")
     except Exception as e:
         print(f"[Amazon] fetch 실패: {e}")
         return []
