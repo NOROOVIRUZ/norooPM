@@ -5,7 +5,7 @@ export interface Product {
   price_usd: number;
   thumbnail: string;
   product_url: string;
-  platform: "amazon" | "aliexpress" | "jd";
+  platform: "amazon" | "amazon_jp" | "aliexpress" | "jd" | "rakuten" | "coupang" | "shopee_tw" | "shopee_sg" | "flipkart";
   rating?: number;
   reviews?: number;
   sales?: string;
@@ -16,8 +16,14 @@ export interface ScrapeResult {
   scraped_at: string;
   platforms: {
     amazon?: Product[];
+    amazon_jp?: Product[];
     aliexpress?: Product[];
     jd?: Product[];
+    rakuten?: Product[];
+    coupang?: Product[];
+    shopee_tw?: Product[];
+    shopee_sg?: Product[];
+    flipkart?: Product[];
   };
 }
 

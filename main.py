@@ -6,7 +6,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from scrapers import amazon, aliexpress, jd
+from scrapers import amazon, amazon_jp, aliexpress, jd, rakuten, coupang, shopee, flipkart
 from core.storage import save_result
 
 DEFAULT_CATEGORIES = [
@@ -19,8 +19,13 @@ DEFAULT_CATEGORIES = [
 
 PLATFORM_MAP = {
     "amazon": amazon,
+    "amazon_jp": amazon_jp,
     "aliexpress": aliexpress,
     "jd": jd,
+    "rakuten": rakuten,
+    "coupang": coupang,
+    "shopee": shopee,
+    "flipkart": flipkart,
 }
 
 
@@ -53,8 +58,9 @@ def main():
         help="수집할 카테고리 (예: 전동칫솔 마사지기)"
     )
     parser.add_argument(
-        "--platforms", nargs="+", default=["amazon", "aliexpress", "jd"],
-        choices=["amazon", "aliexpress", "jd"],
+        "--platforms", nargs="+",
+        default=["amazon", "amazon_jp", "aliexpress", "jd", "rakuten", "coupang", "shopee", "flipkart"],
+        choices=["amazon", "amazon_jp", "aliexpress", "jd", "rakuten", "coupang", "shopee", "flipkart"],
         help="수집할 플랫폼"
     )
     args = parser.parse_args()

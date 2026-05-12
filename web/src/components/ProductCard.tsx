@@ -2,14 +2,26 @@ import { Product } from "../types";
 
 const PLATFORM_COLORS: Record<string, string> = {
   amazon: "#FF9900",
+  amazon_jp: "#FF6600",
   aliexpress: "#E62E2E",
   jd: "#CC0000",
+  rakuten: "#BF0000",
+  coupang: "#1A83FF",
+  shopee_tw: "#EE4D2D",
+  shopee_sg: "#EE4D2D",
+  flipkart: "#2874F0",
 };
 
 const PLATFORM_LABELS: Record<string, string> = {
-  amazon: "Amazon",
+  amazon: "Amazon US",
+  amazon_jp: "Amazon JP",
   aliexpress: "AliExpress",
   jd: "JD.com",
+  rakuten: "楽天",
+  coupang: "쿠팡",
+  shopee_tw: "Shopee TW",
+  shopee_sg: "Shopee SG",
+  flipkart: "Flipkart",
 };
 
 export default function ProductCard({ product }: { product: Product }) {

@@ -5,13 +5,19 @@ import ProductCard from "./components/ProductCard";
 import { Product } from "./types";
 
 const API = import.meta.env.VITE_API_URL ?? "";
-const PLATFORMS = ["amazon", "aliexpress", "jd"] as const;
+const PLATFORMS = ["amazon", "amazon_jp", "aliexpress", "jd", "rakuten", "coupang", "shopee_tw", "shopee_sg", "flipkart"] as const;
 type Platform = (typeof PLATFORMS)[number];
 
 const PLATFORM_LABELS: Record<Platform, string> = {
-  amazon: "Amazon",
+  amazon: "Amazon US",
+  amazon_jp: "Amazon JP",
   aliexpress: "AliExpress",
   jd: "JD.com",
+  rakuten: "楽天",
+  coupang: "쿠팡",
+  shopee_tw: "Shopee TW",
+  shopee_sg: "Shopee SG",
+  flipkart: "Flipkart",
 };
 
 export default function App() {
