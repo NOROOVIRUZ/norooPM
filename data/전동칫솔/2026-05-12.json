@@ -1,7 +1,10 @@
 {
   "category": "전동칫솔",
-  "scraped_at": "2026-05-12T14:20:15.580321+00:00",
+  "scraped_at": "2026-05-12T14:47:17.733615+00:00",
   "platforms": {
-    "amazon": []
+    "amazon": [],
+    "amazon_jp": [],
+    "rakuten": [],
+    "flipkart": []
   }
 }
