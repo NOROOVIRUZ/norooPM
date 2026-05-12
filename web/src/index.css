@@ -21,15 +21,33 @@ body {
 .app { display: flex; flex-direction: column; height: 100vh; }
 
 .header {
-  padding: 14px 24px;
+  padding: 12px 24px;
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   background: var(--surface);
 }
-.header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
-.header h1 span { color: var(--text); font-weight: 400; font-size: 14px; margin-left: 8px; }
+.header-logo { flex-shrink: 0; display: flex; align-items: center; }
+.header-title {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.2;
+}
+.title-main {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.3px;
+}
+.title-sub {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-sub);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
 
 .layout { display: flex; flex: 1; overflow: hidden; }
 
