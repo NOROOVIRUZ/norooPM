@@ -30,6 +30,8 @@ PLATFORM_MAP = {
 
 
 def run(categories: list[str], platforms: list[str]):
+    failed = []
+
     for category in categories:
         print(f"\n▶ [{category}] 수집 시작")
         results = {}
@@ -42,13 +44,23 @@ def run(categories: list[str], platforms: list[str]):
             try:
                 products = mod.scrape(category)
                 results[platform_name] = products
-                print(f"     ✅ {len(products)}개 수집")
+                count = len(products)
+                if count == 0:
+                    print(f"     ⚠️  0개 수집 (차단 또는 파싱 실패)")
+                    failed.append(f"{category}/{platform_name}")
+                else:
+                    print(f"     ✅ {count}개 수집")
             except Exception as e:
                 print(f"     ❌ 실패: {e}")
                 results[platform_name] = []
+                failed.append(f"{category}/{platform_name}")
 
         out = save_result(category, results)
         print(f"  💾 저장 완료: {out}")
+
+    if failed:
+        print(f"\n⚠️  0개 수집 목록: {', '.join(failed)}")
+        sys.exit(2)  # 부분 실패 — Actions에서 warning 처리용
 
 
 def main():
