@@ -10,11 +10,12 @@ from scrapers import amazon, amazon_jp, lazada, jd, rakuten, coupang, shopee, na
 from core.storage import save_result
 
 DEFAULT_CATEGORIES = [
+    "핸디팬",
+    "선풍기",
+    "써큘레이터",
+    "냉각팬",
     "전동칫솔",
-    "마사지기",
-    "이어폰",
-    "블루투스스피커",
-    "공기청정기",
+    "구강세정기",
 ]
 
 PLATFORM_MAP = {

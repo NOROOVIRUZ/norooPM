@@ -2,11 +2,11 @@ name: Scrape Fast
 
 on:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '0 0 * * *'  # 매일 오전 9시 KST (UTC 0:00)
   workflow_dispatch:
     inputs:
       categories:
-        description: '카테고리 (예: 전동칫솔 마사지기)'
+        description: '카테고리 (예: 전동칫솔 구강세정기)'
         required: false
         default: 'all'
 
@@ -38,9 +38,9 @@ jobs:
           set +e
           CATS="${{ github.event.inputs.categories }}"
           if [ "$CATS" = "all" ] || [ -z "$CATS" ]; then
-            python main.py --platforms amazon amazon_jp naver
+            python main.py --platforms amazon_jp naver
           else
-            python main.py --categories $CATS --platforms amazon amazon_jp naver
+            python main.py --categories $CATS --platforms amazon_jp naver
           fi
           EXIT_CODE=$?
           echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
@@ -51,7 +51,7 @@ jobs:
           git config user.name "norooPM-bot"
           git config user.email "actions@github.com"
           git add data/
-          git diff --cached --quiet || git commit -m "data(fast): $(date +'%Y-%m-%d %H:%M') 수집"
+          git diff --cached --quiet || git commit -m "data: $(date +'%Y-%m-%d %H:%M') 수집"
           git push
 
       - name: Telegram 알림 (성공 시만)
@@ -59,4 +59,4 @@ jobs:
         run: |
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
-            -d "text=✅ norooPM 수집 완료 (Amazon/Rakuten/Flipkart)%0A👉 https://norooviruz.github.io/norooPM/"
+            -d "text=✅ norooPM 수집 완료 (AmazonJP + Naver)%0A👉 https://norooviruz.github.io/norooPM/"
