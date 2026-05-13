@@ -23,6 +23,7 @@ def save_result(category: str, platforms: dict) -> Path:
 
     out_path = category_dir / f"{today}.json"
     out_path.write_text(json.dumps(result, ensure_ascii=False, indent=2))
+    (category_dir / "latest.json").write_text(json.dumps(result, ensure_ascii=False, indent=2))
     _update_manifest(category, today)
     return out_path
 
