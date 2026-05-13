@@ -20,10 +20,20 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
 
     for i, item in enumerate(items[:max_items]):
         try:
-            name = item.css("h2 span").get("").strip()
+            if i == 0:
+                # 첫 번째 아이템 디버그 — 셀렉터 검증용
+                print(f"[Amazon JP DEBUG] h2 span → {item.css('h2 span').get('')!r}")
+                print(f"[Amazon JP DEBUG] h2 a span → {item.css('h2 a span').get('')!r}")
+                print(f"[Amazon JP DEBUG] img.s-image src → {item.css('img.s-image').attrib.get('src','')!r}")
+                print(f"[Amazon JP DEBUG] .a-price .a-offscreen → {item.css('.a-price .a-offscreen').get('')!r}")
+
+            name = (item.css("h2 a span").get("")
+                    or item.css("h2 span").get("")).strip()
             price_str = item.css(".a-price .a-offscreen").get("").strip()
-            thumbnail = item.css("img.s-image").attrib.get("src", "")
-            href = item.css("h2 a").attrib.get("href", "")
+            thumbnail = (item.css("img.s-image").attrib.get("src", "")
+                         or item.css("img").attrib.get("src", ""))
+            href = (item.css("h2 a").attrib.get("href", "")
+                    or item.css("a[href*='/dp/']").attrib.get("href", ""))
             product_url = f"https://www.amazon.co.jp{href}" if href.startswith("/") else href
 
             if name:
