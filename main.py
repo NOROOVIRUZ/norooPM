@@ -6,7 +6,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from scrapers import amazon, amazon_jp, aliexpress, jd, rakuten, coupang, shopee, flipkart
+from scrapers import amazon, amazon_jp, lazada, jd, rakuten, coupang, shopee
 from core.storage import save_result
 
 DEFAULT_CATEGORIES = [
@@ -20,12 +20,11 @@ DEFAULT_CATEGORIES = [
 PLATFORM_MAP = {
     "amazon": amazon,
     "amazon_jp": amazon_jp,
-    "aliexpress": aliexpress,
+    "lazada": lazada,
     "jd": jd,
     "rakuten": rakuten,
     "coupang": coupang,
     "shopee": shopee,
-    "flipkart": flipkart,
 }
 
 
@@ -60,7 +59,7 @@ def run(categories: list[str], platforms: list[str]):
 
     if failed:
         print(f"\n⚠️  0개 수집 목록: {', '.join(failed)}")
-        sys.exit(2)  # 부분 실패 — Actions에서 warning 처리용
+        sys.exit(2)
 
 
 def main():
@@ -71,8 +70,8 @@ def main():
     )
     parser.add_argument(
         "--platforms", nargs="+",
-        default=["amazon", "amazon_jp", "aliexpress", "jd", "rakuten", "coupang", "shopee", "flipkart"],
-        choices=["amazon", "amazon_jp", "aliexpress", "jd", "rakuten", "coupang", "shopee", "flipkart"],
+        default=["amazon", "amazon_jp", "lazada", "jd", "rakuten", "coupang", "shopee"],
+        choices=["amazon", "amazon_jp", "lazada", "jd", "rakuten", "coupang", "shopee"],
         help="수집할 플랫폼"
     )
     args = parser.parse_args()

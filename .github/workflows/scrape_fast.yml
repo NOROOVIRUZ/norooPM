@@ -35,9 +35,9 @@ jobs:
           set +e
           CATS="${{ github.event.inputs.categories }}"
           if [ "$CATS" = "all" ] || [ -z "$CATS" ]; then
-            python main.py --platforms amazon amazon_jp rakuten flipkart
+            python main.py --platforms amazon amazon_jp rakuten
           else
-            python main.py --categories $CATS --platforms amazon amazon_jp rakuten flipkart
+            python main.py --categories $CATS --platforms amazon amazon_jp rakuten
           fi
           EXIT_CODE=$?
           echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
