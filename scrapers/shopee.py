@@ -3,76 +3,58 @@ import random
 from scrapling.fetchers import StealthyFetcher
 from core.models import Product
 
-# Shopee 국가별 도메인
-COUNTRY_DOMAINS = {
-    "tw": "shopee.tw",
-    "sg": "shopee.sg",
-}
-
-HEADERS_MAP = {
-    "tw": {"Accept-Language": "zh-TW,zh;q=0.9"},
-    "sg": {"Accept-Language": "en-SG,en;q=0.9"},
+COUNTRIES = {
+    "tw": ("shopee.tw", {"Accept-Language": "zh-TW,zh;q=0.9"}, 0.031),
+    "sg": ("shopee.sg", {"Accept-Language": "en-SG,en;q=0.9"}, 0.74),
 }
 
 
 def scrape(category: str, max_items: int = 20) -> list[Product]:
     products = []
-    for country, domain in COUNTRY_DOMAINS.items():
-        result = _scrape_country(category, domain, country, max_items)
-        products.extend(result)
+    for country, (domain, headers, rate) in COUNTRIES.items():
+        products.extend(_scrape_country(category, domain, country, headers, rate, max_items))
     return products
 
 
-def _scrape_country(category: str, domain: str, country: str, max_items: int) -> list[Product]:
-    url = f"https://{domain}/search?keyword={category}&sortBy=sales&page=0"
-    fetcher = StealthyFetcher(auto_match=False)
-
+def _scrape_country(category, domain, country, headers, rate, max_items):
+    url = f"https://{domain}/search?keyword={category}&sortBy=sales"
     try:
-        page = fetcher.get(
-            url, headers=HEADERS_MAP[country],
-            headless=True, network_idle=True,
-        )
+        page = StealthyFetcher.fetch(url, headless=True, network_idle=True)
+        print(f"[Shopee {country.upper()}] 상태:{page.status} 길이:{len(page.html_content)}")
     except Exception as e:
-        print(f"[Shopee {country.upper()}] fetch 실패: {e}")
+        print(f"[Shopee {country.upper()}] 실패: {e}")
         return []
 
     items = page.css("[data-sqe='item'], .shopee-search-item-result__item")
+    print(f"[Shopee {country.upper()}] 아이템 수: {len(items)}")
     result = []
 
     for i, item in enumerate(items[:max_items]):
         try:
-            name_el = item.css("[class*='name'], [class*='title']")
-            price_el = item.css("[class*='price']")
-            img_el = item.css("img")
-            link_el = item.css("a")
-
-            name = name_el.get("").strip() if name_el else ""
-            price_str = price_el.get("").strip() if price_el else ""
-            price_usd = _local_to_usd(price_str, country)
-            thumbnail = img_el.attrib.get("src", "") if img_el else ""
-            href = link_el.attrib.get("href", "") if link_el else ""
+            name = item.css("[class*='name'], [class*='title']").get("").strip()
+            price_str = item.css("[class*='price']").get("").strip()
+            thumbnail = item.css("img").attrib.get("src", "")
+            href = item.css("a").attrib.get("href", "")
             product_url = f"https://{domain}{href}" if href.startswith("/") else href
 
             if name:
                 result.append(Product(
-                    rank=i + 1, name=name, price=price_str, price_usd=price_usd,
+                    rank=i + 1, name=name, price=price_str,
+                    price_usd=_to_usd(price_str, rate),
                     thumbnail=thumbnail, product_url=product_url,
                     platform=f"shopee_{country}",
                 ))
         except Exception:
             continue
-
-        time.sleep(random.uniform(1.5, 2.5))
+        time.sleep(random.uniform(1.0, 2.0))
 
     return result
 
 
-def _local_to_usd(price_str: str, country: str) -> float:
-    rates = {"tw": 0.031, "sg": 0.74}
+def _to_usd(price_str: str, rate: float) -> float:
     try:
-        cleaned = price_str.replace("$", "").replace("NT$", "").replace(",", "").strip()
-        if "~" in cleaned:
-            cleaned = cleaned.split("~")[0].strip()
-        return round(float(cleaned) * rates.get(country, 1.0), 2)
+        import re
+        cleaned = re.sub(r'[^\d.]', '', price_str.split("~")[0])
+        return round(float(cleaned) * rate, 2)
     except ValueError:
         return 0.0

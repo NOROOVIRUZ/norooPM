@@ -49,17 +49,9 @@ jobs:
           git diff --cached --quiet || git commit -m "data(fast): $(date +'%Y-%m-%d %H:%M') 수집"
           git push
 
-      - name: Telegram 알림
-        if: always()
+      - name: Telegram 알림 (성공 시만)
+        if: steps.scraper.outputs.exit_code == '0'
         run: |
-          CODE="${{ steps.scraper.outputs.exit_code }}"
-          if [ "$CODE" = "0" ]; then
-            EMOJI="✅"; MSG="수집 완료"
-          elif [ "$CODE" = "2" ]; then
-            EMOJI="⚠️"; MSG="일부 플랫폼 수집 실패 (차단 의심)"
-          else
-            EMOJI="❌"; MSG="수집 오류"
-          fi
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
-            -d "text=${EMOJI} [Fast] norooPM ${MSG}%0A👉 https://norooviruz.github.io/norooPM/"
+            -d "text=✅ norooPM 수집 완료 (Amazon/Rakuten/Flipkart)%0A👉 https://norooviruz.github.io/norooPM/"

@@ -3,68 +3,55 @@ import random
 from scrapling.fetchers import Fetcher
 from core.models import Product
 
-CATEGORY_SLUGS = {
-    "전동칫솔": "hpc/zgbs/hpc/2151981051",
-    "마사지기": "hpc/zgbs/hpc/2151998051",
-    "이어폰": "electronics/zgbs/electronics/2151981051",
-    "블루투스스피커": "electronics/zgbs/electronics/3210981",
-    "공기청정기": "home/zgbs/home/2151981051",
-}
-
-BASE_URL = "https://www.amazon.co.jp/Best-Sellers"
-HEADERS = {
-    "Accept-Language": "ja-JP,ja;q=0.9",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+CATEGORY_NODES = {
+    "전동칫솔": "4930254051",
+    "마사지기": "4930255051",
+    "이어폰": "2351652051",
+    "블루투스스피커": "3210981",
+    "공기청정기": "3538801",
 }
 
 
 def scrape(category: str, max_items: int = 20) -> list[Product]:
-    slug = CATEGORY_SLUGS.get(category, f"zgbs?search={category}")
-    url = f"{BASE_URL}/{slug}"
-    fetcher = Fetcher(auto_match=False)
+    node_id = CATEGORY_NODES.get(category)
+    if not node_id:
+        return []
 
+    url = f"https://www.amazon.co.jp/Best-Sellers/zgbs/hpc/{node_id}"
     try:
-        page = fetcher.get(url, headers=HEADERS, stealthy_headers=True)
+        page = Fetcher.get(url, stealthy_headers=True)
+        print(f"[Amazon JP] 상태:{page.status} 길이:{len(page.html_content)}")
     except Exception as e:
-        print(f"[Amazon JP] fetch 실패: {e}")
+        print(f"[Amazon JP] 실패: {e}")
         return []
 
     products = []
     items = page.css("#zg-ordered-list .zg-item-immersion")
+    print(f"[Amazon JP] 아이템 수: {len(items)}")
 
-    for item in items[:max_items]:
+    for i, item in enumerate(items[:max_items]):
         try:
-            rank_el = item.css(".zg-bdg-text")
-            name_el = item.css("._cDEzb_p13n-sc-css-line-clamp-3_g3dy1, .p13n-sc-truncate-desktop-type2")
-            price_el = item.css(".p13n-sc-price")
-            img_el = item.css("img.a-dynamic-image, img.p13n-product-image")
-            link_el = item.css("a.a-link-normal")
-
-            rank_text = rank_el.get("").replace("#", "").replace(",", "").strip()
-            rank = int(rank_text) if rank_text.isdigit() else len(products) + 1
-            name = name_el.get("").strip() if name_el else ""
-            price_str = price_el.get("").strip() if price_el else ""
-            price_usd = _jpy_to_usd(price_str)
-            thumbnail = img_el.attrib.get("src", "") if img_el else ""
-            href = link_el.attrib.get("href", "") if link_el else ""
+            name = item.css("._cDEzb_p13n-sc-css-line-clamp-3_g3dy1, .p13n-sc-truncate-desktop-type2").get("").strip()
+            price_str = item.css(".p13n-sc-price").get("").strip()
+            thumbnail = item.css("img").attrib.get("src", "")
+            href = item.css("a.a-link-normal").attrib.get("href", "")
             product_url = f"https://www.amazon.co.jp{href}" if href.startswith("/") else href
 
             if name:
                 products.append(Product(
-                    rank=rank, name=name, price=price_str, price_usd=price_usd,
+                    rank=i + 1, name=name, price=price_str,
+                    price_usd=_jpy_to_usd(price_str),
                     thumbnail=thumbnail, product_url=product_url, platform="amazon_jp",
                 ))
         except Exception:
             continue
-
-        time.sleep(random.uniform(1.0, 2.5))
+        time.sleep(random.uniform(0.5, 1.5))
 
     return products
 
 
 def _jpy_to_usd(price_str: str) -> float:
     try:
-        cleaned = price_str.replace("¥", "").replace(",", "").strip()
-        return round(float(cleaned) * 0.0067, 2)
+        return round(float(price_str.replace("¥", "").replace(",", "").strip()) * 0.0067, 2)
     except ValueError:
         return 0.0
