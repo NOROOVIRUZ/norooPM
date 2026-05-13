@@ -20,9 +20,9 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
 
     for i, item in enumerate(items[:max_items]):
         try:
-            name = item.css("h3, [class*='title']").get("").strip()
-            price_str = (item.css("[class*='price--current']").get("")
-                         or item.css("[class*='sale-price']").get("")).strip()
+            name = item.css("h3::text, [class*='title']::text").get("").strip()
+            price_str = (item.css("[class*='price--current']::text").get("")
+                         or item.css("[class*='sale-price']::text").get("")).strip()
             src = (item.css("img::attr(src)").get("")
                    or item.css("img::attr(data-src)").get(""))
             thumbnail = f"https:{src}" if src.startswith("//") else src

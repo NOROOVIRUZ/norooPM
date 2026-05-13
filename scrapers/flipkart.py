@@ -23,10 +23,10 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
     for i, item in enumerate(items[:max_items]):
         try:
             name = (item.css("a::attr(title)").get("")
-                    or item.css("div[class*='KzDlHZ']").get("")
-                    or item.css("div[class*='_4rR01T']").get("")).strip()
-            price_str = (item.css("div[class*='Nx9bqj']").get("")
-                         or item.css("div[class*='_30jeq3']").get("")).strip()
+                    or item.css("div[class*='KzDlHZ']::text").get("")
+                    or item.css("div[class*='_4rR01T']::text").get("")).strip()
+            price_str = (item.css("div[class*='Nx9bqj']::text").get("")
+                         or item.css("div[class*='_30jeq3']::text").get("")).strip()
             thumbnail = item.css("img::attr(src)").get("")
             href = (item.css("a[href*='/p/']::attr(href)").get("")
                     or item.css("a[href*='pid=']::attr(href)").get("")

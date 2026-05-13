@@ -32,8 +32,8 @@ def _scrape_country(category, domain, country, rate, max_items):
 
     for i, item in enumerate(items[:max_items]):
         try:
-            name = item.css("[class*='name'], [class*='title']").get("").strip()
-            price_str = item.css("[class*='price']").get("").strip()
+            name = item.css("[class*='name']::text, [class*='title']::text").get("").strip()
+            price_str = item.css("[class*='price']::text").get("").strip()
             thumbnail = item.css("img::attr(src)").get("")
             href = item.css("a::attr(href)").get("")
             product_url = f"https://{domain}{href}" if href.startswith("/") else href

@@ -31,8 +31,8 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
 
     for i, item in enumerate(items[:max_items]):
         try:
-            name = item.css(".name, .product-name").get("").strip()
-            price_val = item.css(".price-value").get("").strip()
+            name = item.css(".name::text, .product-name::text").get("").strip()
+            price_val = item.css(".price-value::text").get("").strip()
             price_str = f"₩{price_val}" if price_val else ""
 
             src = (item.css("img::attr(src)").get("")
