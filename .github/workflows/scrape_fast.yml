@@ -25,19 +25,21 @@ jobs:
           cache: 'pip'
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          pip install -r requirements.txt
+          scrapling install
 
       - name: Run scraper
         id: scraper
         run: |
+          set +e
           CATS="${{ github.event.inputs.categories }}"
           if [ "$CATS" = "all" ] || [ -z "$CATS" ]; then
             python main.py --platforms amazon amazon_jp rakuten flipkart
-            EXIT_CODE=$?
           else
             python main.py --categories $CATS --platforms amazon amazon_jp rakuten flipkart
-            EXIT_CODE=$?
           fi
+          EXIT_CODE=$?
           echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
         continue-on-error: true
 

@@ -32,13 +32,15 @@ jobs:
       - name: Run scraper
         id: scraper
         run: |
+          set +e
           CATS="${{ github.event.inputs.categories }}"
           if [ "$CATS" = "all" ] || [ -z "$CATS" ]; then
             python main.py --platforms aliexpress jd coupang shopee
           else
             python main.py --categories $CATS --platforms aliexpress jd coupang shopee
           fi
-          echo "exit_code=$?" >> $GITHUB_OUTPUT
+          EXIT_CODE=$?
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
         continue-on-error: true
 
       - name: Commit data

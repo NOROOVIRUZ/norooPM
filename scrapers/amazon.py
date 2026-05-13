@@ -1,8 +1,7 @@
 import re
 import time
 import random
-import xml.etree.ElementTree as ET
-from scrapling.fetchers import Fetcher
+from scrapling.fetchers import StealthyFetcher
 from core.models import Product
 
 CATEGORY_NODES = {
@@ -19,44 +18,49 @@ CATEGORY_NODES = {
 
 def scrape(category: str, max_items: int = 20) -> list[Product]:
     node_id = CATEGORY_NODES.get(category)
-    if not node_id:
-        return []
+    url = (f"https://www.amazon.com/Best-Sellers/zgbs/hpc/{node_id}" if node_id
+           else f"https://www.amazon.com/s?k={category}&s=exact-aware-popularity-rank")
 
-    url = f"https://www.amazon.com/rss/bestsellers/hpc/{node_id}"
     try:
-        page = Fetcher.get(url, stealthy_headers=True)
+        page = StealthyFetcher.fetch(url, headless=True, network_idle=True, disable_resources=True)
         print(f"[Amazon] 상태:{page.status} 길이:{len(page.html_content)}")
-        return _parse_rss(page.html_content, max_items)
     except Exception as e:
         print(f"[Amazon] 실패: {e}")
         return []
 
+    # Best Sellers 페이지
+    items = page.css("#zg-ordered-list .zg-item-immersion")
+    if not items:
+        # 검색 결과 페이지 폴백
+        items = page.css("[data-component-type='s-search-result']")
+    print(f"[Amazon] 아이템 수: {len(items)}")
 
-def _parse_rss(xml_text: str, max_items: int) -> list[Product]:
     products = []
-    try:
-        root = ET.fromstring(xml_text)
-        for i, item in enumerate(root.findall(".//item")[:max_items]):
-            title = item.findtext("title", "").strip()
-            link = item.findtext("link", "").strip()
-            desc = item.findtext("description", "")
+    for i, item in enumerate(items[:max_items]):
+        try:
+            name = (item.css("._cDEzb_p13n-sc-css-line-clamp-3_g3dy1").get("")
+                    or item.css("h2 a span").get("")).strip()
+            price_str = (item.css(".p13n-sc-price").get("")
+                         or item.css(".a-price .a-offscreen").get("")).strip()
+            thumbnail = item.css("img").attrib.get("src", "")
+            href = (item.css("a.a-link-normal").attrib.get("href", "")
+                    or item.css("h2 a").attrib.get("href", ""))
+            product_url = f"https://www.amazon.com{href}" if href.startswith("/") else href
 
-            price_str, price_usd = "", 0.0
-            m = re.search(r'\$[\d,]+\.?\d*', desc)
-            if m:
-                price_str = m.group()
-                price_usd = float(price_str.replace("$", "").replace(",", ""))
-
-            thumbnail = ""
-            m2 = re.search(r'src=["\']([^"\']+)["\']', desc)
-            if m2:
-                thumbnail = m2.group(1)
-
-            if title:
+            if name:
                 products.append(Product(
-                    rank=i + 1, name=title, price=price_str, price_usd=price_usd,
-                    thumbnail=thumbnail, product_url=link, platform="amazon",
+                    rank=i + 1, name=name, price=price_str,
+                    price_usd=_parse_price(price_str),
+                    thumbnail=thumbnail, product_url=product_url, platform="amazon",
                 ))
-    except ET.ParseError as e:
-        print(f"[Amazon] XML 파싱 실패: {e}")
+        except Exception:
+            continue
+
     return products
+
+
+def _parse_price(s: str) -> float:
+    try:
+        return float(s.replace("$", "").replace(",", "").strip())
+    except ValueError:
+        return 0.0
