@@ -1,8 +1,7 @@
 {
   "category": "핸디팬",
-  "scraped_at": "2026-05-13T06:39:51.071716+00:00",
+  "scraped_at": "2026-05-13T07:20:15.340962+00:00",
   "platforms": {
-    "amazon_jp": [],
     "naver": [
       {
         "rank": 1,
@@ -102,11 +101,11 @@
       },
       {
         "rank": 9,
-        "name": "드럼뮤트 핸드팬 아동용 키트 페달 드럼가방 알루미늄",
-        "price": "₩20,230",
-        "price_usd": 14.77,
-        "thumbnail": "https://shopping-phinf.pstatic.net/main_5543460/55434601881.20260220163547.jpg",
-        "product_url": "https://search.shopping.naver.com/catalog/55434601881",
+        "name": "손드럼 핸드팬 명상 힐링 악기 연습용 입문 초보자",
+        "price": "₩127,740",
+        "price_usd": 93.25,
+        "thumbnail": "https://shopping-phinf.pstatic.net/main_5349464/53494640882.20260504171311.jpg",
+        "product_url": "https://search.shopping.naver.com/catalog/53494640882",
         "platform": "naver_네이버",
         "rating": null,
         "reviews": null,
@@ -114,11 +113,11 @@
       },
       {
         "rank": 10,
-        "name": "손드럼 핸드팬 명상 힐링 악기 연습용 입문 초보자",
-        "price": "₩127,740",
-        "price_usd": 93.25,
-        "thumbnail": "https://shopping-phinf.pstatic.net/main_5349464/53494640882.20260504171311.jpg",
-        "product_url": "https://search.shopping.naver.com/catalog/53494640882",
+        "name": "드럼뮤트 핸드팬 아동용 키트 페달 드럼가방 알루미늄",
+        "price": "₩20,230",
+        "price_usd": 14.77,
+        "thumbnail": "https://shopping-phinf.pstatic.net/main_5543460/55434601881.20260220163547.jpg",
+        "product_url": "https://search.shopping.naver.com/catalog/55434601881",
         "platform": "naver_네이버",
         "rating": null,
         "reviews": null,
