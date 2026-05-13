@@ -15,23 +15,30 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
         return []
 
     products = []
-    # Flipkart search result containers — try multiple stable selectors
-    items = page.css("[data-id], div[class*='_1AtVbE'], div[class*='_2kHMtA']")
+    items = page.css("[data-id]")
     if not items:
-        # Fallback: any anchor wrapping a product card
-        items = page.css("div[class*='col'][class*='_2Kn22P'] > div")
+        items = page.css("div[class*='_1AtVbE']")
     print(f"[Flipkart] 아이템 수: {len(items)}")
 
     for i, item in enumerate(items[:max_items]):
         try:
-            name = item.css("a[title], div[class*='_4rR01T'], div[class*='KzDlHZ'], a[class*='s1Q9rs']").get("").strip()
-            if not name:
-                name = item.css("a").attrib.get("title", "").strip()
-            price_str = item.css("div[class*='_30jeq3'], div[class*='Nx9bqj'], [class*='price']").get("").strip()
-            thumbnail = item.css("img").attrib.get("src", "")
-            href = item.css("a[href*='/p/'], a[href*='pid=']").attrib.get("href", "")
-            if not href:
-                href = item.css("a").attrib.get("href", "")
+            # title: try <a title="..."> first, then inner text of known elements
+            link_with_title = item.css("a[title]")
+            if link_with_title:
+                name = link_with_title.attrib.get("title", "").strip()
+            else:
+                name = item.css("div[class*='KzDlHZ'], div[class*='_4rR01T'], div[class*='IRpwTa']").get("").strip()
+
+            price_els = item.css("div[class*='Nx9bqj'], div[class*='_30jeq3']")
+            price_str = price_els.get("").strip() if price_els else ""
+
+            img_els = item.css("img")
+            thumbnail = img_els.attrib.get("src", "") if img_els else ""
+
+            link_els = (item.css("a[href*='/p/']") or
+                        item.css("a[href*='pid=']") or
+                        item.css("a"))
+            href = link_els.attrib.get("href", "") if link_els else ""
             product_url = f"https://www.flipkart.com{href}" if href.startswith("/") else href
 
             if name:
@@ -40,9 +47,10 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
                     price_usd=_inr_to_usd(price_str),
                     thumbnail=thumbnail, product_url=product_url, platform="flipkart",
                 ))
-        except Exception:
+        except Exception as e:
+            print(f"[Flipkart] 아이템 {i} 파싱 오류: {e}")
             continue
-        time.sleep(random.uniform(0.5, 1.0))
+        time.sleep(random.uniform(0.3, 0.8))
 
     return products
 

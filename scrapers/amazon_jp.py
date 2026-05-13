@@ -20,20 +20,16 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
 
     for i, item in enumerate(items[:max_items]):
         try:
-            if i == 0:
-                # 첫 번째 아이템 디버그 — 셀렉터 검증용
-                print(f"[Amazon JP DEBUG] h2 span → {item.css('h2 span').get('')!r}")
-                print(f"[Amazon JP DEBUG] h2 a span → {item.css('h2 a span').get('')!r}")
-                print(f"[Amazon JP DEBUG] img.s-image src → {item.css('img.s-image').attrib.get('src','')!r}")
-                print(f"[Amazon JP DEBUG] .a-price .a-offscreen → {item.css('.a-price .a-offscreen').get('')!r}")
+            name = item.css("h2 span").get("").strip()
 
-            name = (item.css("h2 a span").get("")
-                    or item.css("h2 span").get("")).strip()
-            price_str = item.css(".a-price .a-offscreen").get("").strip()
-            thumbnail = (item.css("img.s-image").attrib.get("src", "")
-                         or item.css("img").attrib.get("src", ""))
-            href = (item.css("h2 a").attrib.get("href", "")
-                    or item.css("a[href*='/dp/']").attrib.get("href", ""))
+            price_els = item.css(".a-price .a-offscreen")
+            price_str = price_els.get("").strip() if price_els else ""
+
+            img_els = item.css("img.s-image") or item.css("img")
+            thumbnail = img_els.attrib.get("src", "") if img_els else ""
+
+            link_els = item.css("a[href*='/dp/']") or item.css("a.a-link-normal")
+            href = link_els.attrib.get("href", "") if link_els else ""
             product_url = f"https://www.amazon.co.jp{href}" if href.startswith("/") else href
 
             if name:
@@ -42,9 +38,10 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
                     price_usd=_jpy_to_usd(price_str),
                     thumbnail=thumbnail, product_url=product_url, platform="amazon_jp",
                 ))
-        except Exception:
+        except Exception as e:
+            print(f"[Amazon JP] 아이템 {i} 파싱 오류: {e}")
             continue
-        time.sleep(random.uniform(0.5, 1.0))
+        time.sleep(random.uniform(0.3, 0.8))
 
     return products
 

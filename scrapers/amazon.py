@@ -28,10 +28,8 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
         print(f"[Amazon] 실패: {e}")
         return []
 
-    # Best Sellers 페이지
     items = page.css("#zg-ordered-list .zg-item-immersion")
     if not items:
-        # 검색 결과 페이지 폴백
         items = page.css("[data-component-type='s-search-result']")
     print(f"[Amazon] 아이템 수: {len(items)}")
 
@@ -39,12 +37,15 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
     for i, item in enumerate(items[:max_items]):
         try:
             name = (item.css("._cDEzb_p13n-sc-css-line-clamp-3_g3dy1").get("")
-                    or item.css("h2 a span").get("")).strip()
-            price_str = (item.css(".p13n-sc-price").get("")
-                         or item.css(".a-price .a-offscreen").get("")).strip()
-            thumbnail = item.css("img").attrib.get("src", "")
-            href = (item.css("a.a-link-normal").attrib.get("href", "")
-                    or item.css("h2 a").attrib.get("href", ""))
+                    or item.css("h2 span").get("")).strip()
+            price_els = item.css(".p13n-sc-price") or item.css(".a-price .a-offscreen")
+            price_str = price_els.get("").strip() if price_els else ""
+
+            img_els = item.css("img")
+            thumbnail = img_els.attrib.get("src", "") if img_els else ""
+
+            link_els = item.css("a.a-link-normal") or item.css("h2 a")
+            href = link_els.attrib.get("href", "") if link_els else ""
             product_url = f"https://www.amazon.com{href}" if href.startswith("/") else href
 
             if name:
@@ -53,7 +54,8 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
                     price_usd=_parse_price(price_str),
                     thumbnail=thumbnail, product_url=product_url, platform="amazon",
                 ))
-        except Exception:
+        except Exception as e:
+            print(f"[Amazon] 아이템 {i} 파싱 오류: {e}")
             continue
 
     return products
@@ -61,6 +63,6 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
 
 def _parse_price(s: str) -> float:
     try:
-        return float(s.replace("$", "").replace(",", "").strip())
+        return float(re.sub(r'[^\d.]', '', s))
     except ValueError:
         return 0.0

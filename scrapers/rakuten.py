@@ -28,7 +28,6 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
         return []
 
     products = []
-    # Try ranking page selectors first, fallback to search selectors
     items = page.css(".rnkgItem, .rankingItem, [class*='rnkgItem']")
     if not items:
         items = page.css(".searchresultitem, [class*='item--']")
@@ -36,11 +35,17 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
 
     for i, item in enumerate(items[:max_items]):
         try:
-            name = item.css(".rnkgItemName a, .itemName a, h2 a, [class*='itemName'] a").get("").strip()
-            price_str = item.css(".price, [class*='price--']").get("").strip()
-            thumbnail = item.css("img").attrib.get("src", "")
-            href = (item.css(".rnkgItemName a").attrib.get("href", "")
-                    or item.css("a").attrib.get("href", ""))
+            name_els = item.css(".rnkgItemName a, .itemName a, h2 a, [class*='itemName'] a")
+            name = name_els.get("").strip()
+
+            price_els = item.css(".price, [class*='price--']")
+            price_str = price_els.get("").strip() if price_els else ""
+
+            img_els = item.css("img")
+            thumbnail = img_els.attrib.get("src", "") if img_els else ""
+
+            link_els = item.css(".rnkgItemName a") or item.css("a[href*='item.rakuten']") or item.css("a")
+            href = link_els.attrib.get("href", "") if link_els else ""
             product_url = href if href.startswith("http") else f"https://search.rakuten.co.jp{href}"
 
             if name:
@@ -49,9 +54,10 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
                     price_usd=_jpy_to_usd(price_str),
                     thumbnail=thumbnail, product_url=product_url, platform="rakuten",
                 ))
-        except Exception:
+        except Exception as e:
+            print(f"[Rakuten] 아이템 {i} 파싱 오류: {e}")
             continue
-        time.sleep(random.uniform(0.5, 1.5))
+        time.sleep(random.uniform(0.5, 1.0))
 
     return products
 

@@ -1,3 +1,4 @@
+import re
 import time
 import random
 from scrapling.fetchers import StealthyFetcher
@@ -31,11 +32,21 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
     for i, item in enumerate(items[:max_items]):
         try:
             name = item.css(".name, .product-name").get("").strip()
-            price_val = item.css(".price-value").get("").strip()
+
+            price_els = item.css(".price-value")
+            price_val = price_els.get("").strip() if price_els else ""
             price_str = f"₩{price_val}" if price_val else ""
-            src = item.css("img").attrib.get("src", "") or item.css("img").attrib.get("data-img-src", "")
-            thumbnail = f"https:{src}" if src.startswith("//") else src
-            href = item.css("a[href*='/vp/products/']").attrib.get("href", "")
+
+            # 이미지: src 또는 data-img-src
+            img_els = item.css("img")
+            if img_els:
+                src = img_els.attrib.get("src", "") or img_els.attrib.get("data-img-src", "")
+                thumbnail = f"https:{src}" if src.startswith("//") else src
+            else:
+                thumbnail = ""
+
+            link_els = item.css("a[href*='/vp/products/']") or item.css("a")
+            href = link_els.attrib.get("href", "") if link_els else ""
             product_url = f"https://www.coupang.com{href}" if href.startswith("/") else href
 
             if name:
@@ -44,15 +55,19 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
                     price_usd=_krw_to_usd(price_val),
                     thumbnail=thumbnail, product_url=product_url, platform="coupang",
                 ))
-        except Exception:
+        except Exception as e:
+            print(f"[Coupang] 아이템 {i} 파싱 오류: {e}")
             continue
-        time.sleep(random.uniform(1.0, 2.0))
+        time.sleep(random.uniform(0.5, 1.0))
 
     return products
 
 
 def _krw_to_usd(price_str: str) -> float:
     try:
-        return round(float(price_str.replace(",", "").strip()) * 0.00073, 2)
+        cleaned = re.sub(r'[^\d.]', '', price_str)
+        if not cleaned:
+            return 0.0
+        return round(float(cleaned) * 0.00073, 2)
     except ValueError:
         return 0.0
