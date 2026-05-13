@@ -5,14 +5,14 @@ from scrapling.fetchers import StealthyFetcher
 from core.models import Product
 
 COUNTRIES = {
-    "tw": ("shopee.tw", {"Accept-Language": "zh-TW,zh;q=0.9"}, 0.031),
-    "sg": ("shopee.sg", {"Accept-Language": "en-SG,en;q=0.9"}, 0.74),
+    "tw": ("shopee.tw", 0.031),
+    "sg": ("shopee.sg", 0.74),
 }
 
 
 def scrape(category: str, max_items: int = 20) -> list[Product]:
     products = []
-    for country, (domain, headers, rate) in COUNTRIES.items():
+    for country, (domain, rate) in COUNTRIES.items():
         products.extend(_scrape_country(category, domain, country, rate, max_items))
     return products
 
@@ -33,14 +33,9 @@ def _scrape_country(category, domain, country, rate, max_items):
     for i, item in enumerate(items[:max_items]):
         try:
             name = item.css("[class*='name'], [class*='title']").get("").strip()
-            price_els = item.css("[class*='price']")
-            price_str = price_els.get("").strip() if price_els else ""
-
-            img_els = item.css("img")
-            thumbnail = img_els.attrib.get("src", "") if img_els else ""
-
-            link_els = item.css("a")
-            href = link_els.attrib.get("href", "") if link_els else ""
+            price_str = item.css("[class*='price']").get("").strip()
+            thumbnail = item.css("img::attr(src)").get("")
+            href = item.css("a::attr(href)").get("")
             product_url = f"https://{domain}{href}" if href.startswith("/") else href
 
             if name:
@@ -51,7 +46,7 @@ def _scrape_country(category, domain, country, rate, max_items):
                     platform=f"shopee_{country}",
                 ))
         except Exception as e:
-            print(f"[Shopee {country.upper()}] 아이템 {i} 파싱 오류: {e}")
+            print(f"[Shopee {country.upper()}] 아이템 {i} 오류: {e}")
             continue
         time.sleep(random.uniform(0.5, 1.0))
 
@@ -61,8 +56,6 @@ def _scrape_country(category, domain, country, rate, max_items):
 def _to_usd(price_str: str, rate: float) -> float:
     try:
         cleaned = re.sub(r'[^\d.]', '', price_str.split("~")[0])
-        if not cleaned:
-            return 0.0
-        return round(float(cleaned) * rate, 2)
+        return round(float(cleaned) * rate, 2) if cleaned else 0.0
     except ValueError:
         return 0.0

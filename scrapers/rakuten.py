@@ -15,10 +15,8 @@ CATEGORY_IDS = {
 
 def scrape(category: str, max_items: int = 20) -> list[Product]:
     cat_id = CATEGORY_IDS.get(category, "")
-    if cat_id:
-        url = f"https://ranking.rakuten.co.jp/daily/{cat_id}/"
-    else:
-        url = f"https://search.rakuten.co.jp/search/mall/{category}/?s=2"
+    url = (f"https://ranking.rakuten.co.jp/daily/{cat_id}/" if cat_id
+           else f"https://search.rakuten.co.jp/search/mall/{category}/?s=2")
 
     try:
         page = StealthyFetcher.fetch(url, headless=True, network_idle=True)
@@ -35,17 +33,14 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
 
     for i, item in enumerate(items[:max_items]):
         try:
-            name_els = item.css(".rnkgItemName a, .itemName a, h2 a, [class*='itemName'] a")
-            name = name_els.get("").strip()
-
-            price_els = item.css(".price, [class*='price--']")
-            price_str = price_els.get("").strip() if price_els else ""
-
-            img_els = item.css("img")
-            thumbnail = img_els.attrib.get("src", "") if img_els else ""
-
-            link_els = item.css(".rnkgItemName a") or item.css("a[href*='item.rakuten']") or item.css("a")
-            href = link_els.attrib.get("href", "") if link_els else ""
+            name = (item.css(".rnkgItemName a").get("")
+                    or item.css(".itemName a").get("")
+                    or item.css("h2 a").get("")).strip()
+            price_str = item.css(".price, [class*='price--']").get("").strip()
+            thumbnail = item.css("img::attr(src)").get("")
+            href = (item.css(".rnkgItemName a::attr(href)").get("")
+                    or item.css("a[href*='item.rakuten']::attr(href)").get("")
+                    or item.css("a::attr(href)").get(""))
             product_url = href if href.startswith("http") else f"https://search.rakuten.co.jp{href}"
 
             if name:
@@ -55,7 +50,7 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
                     thumbnail=thumbnail, product_url=product_url, platform="rakuten",
                 ))
         except Exception as e:
-            print(f"[Rakuten] 아이템 {i} 파싱 오류: {e}")
+            print(f"[Rakuten] 아이템 {i} 오류: {e}")
             continue
         time.sleep(random.uniform(0.5, 1.0))
 
@@ -65,8 +60,6 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
 def _jpy_to_usd(price_str: str) -> float:
     try:
         cleaned = re.sub(r'[^\d.]', '', price_str)
-        if not cleaned:
-            return 0.0
-        return round(float(cleaned) * 0.0067, 2)
+        return round(float(cleaned) * 0.0067, 2) if cleaned else 0.0
     except ValueError:
         return 0.0

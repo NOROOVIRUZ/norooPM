@@ -32,21 +32,15 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
     for i, item in enumerate(items[:max_items]):
         try:
             name = item.css(".name, .product-name").get("").strip()
-
-            price_els = item.css(".price-value")
-            price_val = price_els.get("").strip() if price_els else ""
+            price_val = item.css(".price-value").get("").strip()
             price_str = f"₩{price_val}" if price_val else ""
 
-            # 이미지: src 또는 data-img-src
-            img_els = item.css("img")
-            if img_els:
-                src = img_els.attrib.get("src", "") or img_els.attrib.get("data-img-src", "")
-                thumbnail = f"https:{src}" if src.startswith("//") else src
-            else:
-                thumbnail = ""
+            src = (item.css("img::attr(src)").get("")
+                   or item.css("img::attr(data-img-src)").get(""))
+            thumbnail = f"https:{src}" if src.startswith("//") else src
 
-            link_els = item.css("a[href*='/vp/products/']") or item.css("a")
-            href = link_els.attrib.get("href", "") if link_els else ""
+            href = (item.css("a[href*='/vp/products/']::attr(href)").get("")
+                    or item.css("a::attr(href)").get(""))
             product_url = f"https://www.coupang.com{href}" if href.startswith("/") else href
 
             if name:
@@ -56,7 +50,7 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
                     thumbnail=thumbnail, product_url=product_url, platform="coupang",
                 ))
         except Exception as e:
-            print(f"[Coupang] 아이템 {i} 파싱 오류: {e}")
+            print(f"[Coupang] 아이템 {i} 오류: {e}")
             continue
         time.sleep(random.uniform(0.5, 1.0))
 
@@ -66,8 +60,6 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
 def _krw_to_usd(price_str: str) -> float:
     try:
         cleaned = re.sub(r'[^\d.]', '', price_str)
-        if not cleaned:
-            return 0.0
-        return round(float(cleaned) * 0.00073, 2)
+        return round(float(cleaned) * 0.00073, 2) if cleaned else 0.0
     except ValueError:
         return 0.0

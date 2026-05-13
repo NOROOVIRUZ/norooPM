@@ -21,22 +21,14 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
     for i, item in enumerate(items[:max_items]):
         try:
             name = item.css("h3, [class*='title']").get("").strip()
-            price_els = item.css("[class*='price--current'], [class*='sale-price']")
-            price_str = price_els.get("").strip() if price_els else ""
-
-            img_els = item.css("img")
-            if img_els:
-                src = img_els.attrib.get("src", "") or img_els.attrib.get("data-src", "")
-                thumbnail = f"https:{src}" if src.startswith("//") else src
-            else:
-                thumbnail = ""
-
-            link_els = item.css("a")
-            href = link_els.attrib.get("href", "") if link_els else ""
+            price_str = (item.css("[class*='price--current']").get("")
+                         or item.css("[class*='sale-price']").get("")).strip()
+            src = (item.css("img::attr(src)").get("")
+                   or item.css("img::attr(data-src)").get(""))
+            thumbnail = f"https:{src}" if src.startswith("//") else src
+            href = item.css("a::attr(href)").get("")
             product_url = f"https:{href}" if href.startswith("//") else href
-
-            sales_els = item.css("[class*='sold'], [class*='trade']")
-            sales = sales_els.get("").strip() or None if sales_els else None
+            sales = item.css("[class*='sold'], [class*='trade']").get("").strip() or None
 
             if name:
                 products.append(Product(
@@ -46,7 +38,7 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
                     platform="aliexpress", sales=sales,
                 ))
         except Exception as e:
-            print(f"[AliExpress] 아이템 {i} 파싱 오류: {e}")
+            print(f"[AliExpress] 아이템 {i} 오류: {e}")
             continue
         time.sleep(random.uniform(0.5, 1.0))
 
@@ -56,11 +48,6 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
 def _parse_usd(price_str: str) -> float:
     try:
         cleaned = re.sub(r'[^\d.]', '', price_str)
-        if not cleaned:
-            return 0.0
-        parts = cleaned.split('.')
-        if len(parts) > 2:
-            cleaned = '.'.join([parts[0], parts[-1]])
-        return float(cleaned)
+        return float(cleaned) if cleaned else 0.0
     except ValueError:
         return 0.0

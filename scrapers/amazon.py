@@ -38,14 +38,11 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
         try:
             name = (item.css("._cDEzb_p13n-sc-css-line-clamp-3_g3dy1").get("")
                     or item.css("h2 span").get("")).strip()
-            price_els = item.css(".p13n-sc-price") or item.css(".a-price .a-offscreen")
-            price_str = price_els.get("").strip() if price_els else ""
-
-            img_els = item.css("img")
-            thumbnail = img_els.attrib.get("src", "") if img_els else ""
-
-            link_els = item.css("a.a-link-normal") or item.css("h2 a")
-            href = link_els.attrib.get("href", "") if link_els else ""
+            price_str = (item.css(".p13n-sc-price").get("")
+                         or item.css(".a-price .a-offscreen").get("")).strip()
+            thumbnail = (item.css("img::attr(src)").get(""))
+            href = (item.css("a.a-link-normal::attr(href)").get("")
+                    or item.css("h2 a::attr(href)").get(""))
             product_url = f"https://www.amazon.com{href}" if href.startswith("/") else href
 
             if name:
@@ -55,7 +52,7 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
                     thumbnail=thumbnail, product_url=product_url, platform="amazon",
                 ))
         except Exception as e:
-            print(f"[Amazon] 아이템 {i} 파싱 오류: {e}")
+            print(f"[Amazon] 아이템 {i} 오류: {e}")
             continue
 
     return products
@@ -63,6 +60,7 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
 
 def _parse_price(s: str) -> float:
     try:
-        return float(re.sub(r'[^\d.]', '', s))
+        cleaned = re.sub(r'[^\d.]', '', s)
+        return float(cleaned) if cleaned else 0.0
     except ValueError:
         return 0.0

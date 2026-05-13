@@ -21,15 +21,11 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
     for i, item in enumerate(items[:max_items]):
         try:
             name = item.css("h2 span").get("").strip()
-
-            price_els = item.css(".a-price .a-offscreen")
-            price_str = price_els.get("").strip() if price_els else ""
-
-            img_els = item.css("img.s-image") or item.css("img")
-            thumbnail = img_els.attrib.get("src", "") if img_els else ""
-
-            link_els = item.css("a[href*='/dp/']") or item.css("a.a-link-normal")
-            href = link_els.attrib.get("href", "") if link_els else ""
+            price_str = item.css(".a-price .a-offscreen").get("").strip()
+            thumbnail = (item.css("img.s-image::attr(src)").get("")
+                         or item.css("img::attr(src)").get(""))
+            href = (item.css("a[href*='/dp/']::attr(href)").get("")
+                    or item.css("a.a-link-normal::attr(href)").get(""))
             product_url = f"https://www.amazon.co.jp{href}" if href.startswith("/") else href
 
             if name:
@@ -39,7 +35,7 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
                     thumbnail=thumbnail, product_url=product_url, platform="amazon_jp",
                 ))
         except Exception as e:
-            print(f"[Amazon JP] 아이템 {i} 파싱 오류: {e}")
+            print(f"[Amazon JP] 아이템 {i} 오류: {e}")
             continue
         time.sleep(random.uniform(0.3, 0.8))
 
@@ -49,8 +45,6 @@ def scrape(category: str, max_items: int = 20) -> list[Product]:
 def _jpy_to_usd(price_str: str) -> float:
     try:
         cleaned = re.sub(r'[^\d.]', '', price_str)
-        if not cleaned:
-            return 0.0
-        return round(float(cleaned) * 0.0067, 2)
+        return round(float(cleaned) * 0.0067, 2) if cleaned else 0.0
     except ValueError:
         return 0.0
