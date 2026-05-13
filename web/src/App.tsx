@@ -7,19 +7,12 @@ import { Product } from "./types";
 const API = import.meta.env.VITE_API_URL ?? "";
 const SHEETS_URL = import.meta.env.VITE_SHEETS_URL ?? "";
 
-const PLATFORMS = ["amazon", "amazon_jp", "aliexpress", "jd", "rakuten", "coupang", "shopee_tw", "shopee_sg", "flipkart"] as const;
+const PLATFORMS = ["naver", "amazon_jp"] as const;
 type Platform = (typeof PLATFORMS)[number];
 
 const PLATFORM_LABELS: Record<Platform, string> = {
-  amazon: "Amazon US",
+  naver: "네이버쇼핑",
   amazon_jp: "Amazon JP",
-  aliexpress: "AliExpress",
-  jd: "JD.com",
-  rakuten: "楽天",
-  coupang: "쿠팡",
-  shopee_tw: "Shopee TW",
-  shopee_sg: "Shopee SG",
-  flipkart: "Flipkart",
 };
 
 async function logToSheets(category: string, platform: string, products: Product[]) {
@@ -51,7 +44,7 @@ async function logToSheets(category: string, platform: string, products: Product
 export default function App() {
   const { categories, manifest, loading: manifestLoading } = useManifest();
   const [selected, setSelected] = useState<string | null>(null);
-  const [activePlatform, setActivePlatform] = useState<Platform>("amazon");
+  const [activePlatform, setActivePlatform] = useState<Platform>("naver");
   const [query, setQuery] = useState("");
   const [triggering, setTriggering] = useState(false);
   const { data, loading, error } = useProductData(selected);
@@ -75,7 +68,7 @@ export default function App() {
 
   function handleCategorySelect(cat: string) {
     setSelected(cat);
-    setActivePlatform("amazon");
+    setActivePlatform("naver");
   }
 
   async function triggerScrape() {
