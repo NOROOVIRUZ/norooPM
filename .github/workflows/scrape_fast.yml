@@ -38,9 +38,9 @@ jobs:
           set +e
           CATS="${{ github.event.inputs.categories }}"
           if [ "$CATS" = "all" ] || [ -z "$CATS" ]; then
-            python main.py --platforms amazon_jp naver
+            python main.py --platforms naver
           else
-            python main.py --categories $CATS --platforms amazon_jp naver
+            python main.py --categories $CATS --platforms naver
           fi
           EXIT_CODE=$?
           echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
