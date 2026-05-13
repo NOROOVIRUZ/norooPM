@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { Manifest } from "../types";
 
-const API = import.meta.env.VITE_API_URL ?? "";
+const GITHUB_RAW = "https://raw.githubusercontent.com/NOROOVIRUZ/norooPM/main/data";
 
 export function useManifest() {
   const [manifest, setManifest] = useState<Manifest>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API}/api/manifest`)
+    fetch(`${GITHUB_RAW}/manifest.json`)
       .then((r) => r.json())
       .then(setManifest)
       .catch(() => setManifest({}))

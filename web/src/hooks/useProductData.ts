@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ScrapeResult } from "../types";
 
-const API = import.meta.env.VITE_API_URL ?? "";
+const GITHUB_RAW = "https://raw.githubusercontent.com/NOROOVIRUZ/norooPM/main/data";
 
 export function useProductData(category: string | null) {
   const [data, setData] = useState<ScrapeResult | null>(null);
@@ -13,7 +13,7 @@ export function useProductData(category: string | null) {
     setLoading(true);
     setError(null);
 
-    fetch(`${API}/api/data/${encodeURIComponent(category)}`)
+    fetch(`${GITHUB_RAW}/${encodeURIComponent(category)}/latest.json`)
       .then((r) => {
         if (!r.ok) throw new Error("데이터 없음");
         return r.json();
