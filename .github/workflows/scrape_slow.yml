@@ -35,9 +35,9 @@ jobs:
           set +e
           CATS="${{ github.event.inputs.categories }}"
           if [ "$CATS" = "all" ] || [ -z "$CATS" ]; then
-            python main.py --platforms lazada jd coupang shopee
+            python main.py --platforms jd coupang shopee
           else
-            python main.py --categories $CATS --platforms lazada jd coupang shopee
+            python main.py --categories $CATS --platforms jd coupang shopee
           fi
           EXIT_CODE=$?
           echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
@@ -51,9 +51,3 @@ jobs:
           git diff --cached --quiet || git commit -m "data(slow): $(date +'%Y-%m-%d %H:%M') 수집"
           git push
 
-      - name: Telegram 알림 (성공 시만)
-        if: steps.scraper.outputs.exit_code == '0'
-        run: |
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
-            -d "text=✅ norooPM 수집 완료 (AliExpress/JD/쿠팡/Shopee)%0A👉 https://norooviruz.github.io/norooPM/"
